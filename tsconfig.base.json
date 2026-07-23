@@ -12,8 +12,6 @@
     "isolatedModules": true,
     "declaration": true,
     "sourceMap": true,
-    "removeComments": false,
-    "baseUrl": ".",
-   
+    "removeComments": false
   }
 }

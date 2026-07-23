@@ -15,7 +15,6 @@
     "build:api": "pnpm --filter @education-ai/api build",
     "build:web": "pnpm --filter @education-ai/web build",
     "build:worker": "pnpm --filter @education-ai/worker build"
-    
   },
   "engines": {
     "node": ">=22"
