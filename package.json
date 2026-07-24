@@ -2,12 +2,15 @@
   "name": "education-ai-platform",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10",
   "scripts": {
     "build": "pnpm -r build",
     "clean": "pnpm -r --if-present clean",
     "dev": "pnpm -r --if-present dev",
-    "lint": "pnpm -r --if-present lint",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "pnpm -r --if-present test",
     "dev:api": "pnpm --filter @education-ai/api dev",
     "dev:web": "pnpm --filter @education-ai/web dev",
@@ -20,10 +23,12 @@
     "node": ">=22"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^26.1.1",
     "eslint": "^10.7.0",
     "prettier": "^3.9.6",
     "tsx": "^4.23.1",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.65.0"
   }
 }

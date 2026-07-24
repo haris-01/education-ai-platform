@@ -1,9 +1,9 @@
-import type { Board } from "../types.js";
+import type { Board } from '../types.js'
 
 const BOARD_PREFIXES: Record<Board, string> = {
-  Cambridge: "CAM",
-};
+  Cambridge: 'CAM',
+}
 
 export function boardPrefix(board: Board): string {
-  return BOARD_PREFIXES[board];
+  return BOARD_PREFIXES[board]
 }

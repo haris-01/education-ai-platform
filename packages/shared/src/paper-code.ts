@@ -5,5 +5,5 @@
  * specimen papers, which aren't split by administrative zone).
  */
 export function paperCode(paper: number, variant?: number): string {
-  return variant !== undefined ? `${paper}${variant}` : String(paper);
+  return variant !== undefined ? `${paper}${variant}` : String(paper)
 }

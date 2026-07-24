@@ -1,16 +1,16 @@
-type LogFn = (message: string) => void;
+type LogFn = (message: string) => void
 
 export interface Logger {
-  info: LogFn;
-  warn: LogFn;
-  error: LogFn;
+  info: LogFn
+  warn: LogFn
+  error: LogFn
 }
 
 export function createLogger(scope: string): Logger {
-  const prefix = `[${scope}]`;
+  const prefix = `[${scope}]`
   return {
-    info: (message) => console.log(`${prefix} ${message}`),
+    info: (message) => console.info(`${prefix} ${message}`),
     warn: (message) => console.warn(`${prefix} ${message}`),
     error: (message) => console.error(`${prefix} ${message}`),
-  };
+  }
 }

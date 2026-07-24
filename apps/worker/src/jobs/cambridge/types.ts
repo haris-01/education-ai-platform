@@ -6,54 +6,53 @@
  * not widening it to `string`.
  */
 
-export type Board =
-  | "Cambridge";
-  // | "Edexcel"
-  // | "AQA"
-  // | "OCR"
+export type Board = 'Cambridge'
+// | "Edexcel"
+// | "AQA"
+// | "OCR"
 
 export type DocumentType =
-  | "SYLLABUS"
-  | "QUESTION_PAPER"
-  | "MARK_SCHEME"
-  | "EXAMINER_REPORT"
-  | "CONFIDENTIAL_INSTRUCTIONS"
-  | "SPECIMEN_PAPER"
-  | "OTHER";
+  | 'SYLLABUS'
+  | 'QUESTION_PAPER'
+  | 'MARK_SCHEME'
+  | 'EXAMINER_REPORT'
+  | 'CONFIDENTIAL_INSTRUCTIONS'
+  | 'SPECIMEN_PAPER'
+  | 'OTHER'
 
-export type ExamSession = "MJ" | "ON" | "FM";
+export type ExamSession = 'MJ' | 'ON' | 'FM'
 
 export interface SubjectSections {
-  syllabus?: string;
-  pastPapers?: string;
-  publishedResources?: string;
-  support?: string;
+  syllabus?: string
+  pastPapers?: string
+  publishedResources?: string
+  support?: string
 }
 
 export interface SubjectMetadata {
-  board: Board;
+  board: Board
   /** Stable subject identity, e.g. "CAM-IGCSE-0625". Prefer this over `subject` for identity/joins — display names change (e.g. "Physics" vs "Additional Physics"), syllabus codes don't. */
-  subjectId: string;
-  qualification: string;
-  subject: string;
-  syllabusCode: string;
-  sections: SubjectSections;
+  subjectId: string
+  qualification: string
+  subject: string
+  syllabusCode: string
+  sections: SubjectSections
 }
 
 export interface DocumentResourceMetadata {
-  board: Board;
-  subjectId: string;
-  qualification: string;
-  subject: string;
-  syllabusCode: string;
-  year?: number;
-  session?: ExamSession;
-  paper?: number;
-  variant?: number;
+  board: Board
+  subjectId: string
+  qualification: string
+  subject: string
+  syllabusCode: string
+  year?: number
+  session?: ExamSession
+  paper?: number
+  variant?: number
 }
 
 export interface DocumentResource {
-  type: DocumentType;
+  type: DocumentType
   /**
    * Stable, human-readable id, e.g. "CAM-0625-MJ-2024-41-QP" or
    * "CAM-0625-SYL-2026". Deterministic: derived solely from `type` and
@@ -61,21 +60,21 @@ export interface DocumentResource {
    * immutable once generated — future storage layers should key on it,
    * never regenerate/overwrite it.
    */
-  resourceId: string;
-  title: string;
-  url: string;
-  metadata: DocumentResourceMetadata;
+  resourceId: string
+  title: string
+  url: string
+  metadata: DocumentResourceMetadata
 }
 
 /** Result of `download()` — the resource plus where its bytes landed on disk. */
 export interface DownloadedDocument {
-  resource: DocumentResource;
-  filePath: string;
+  resource: DocumentResource
+  filePath: string
 }
 
 /** Result of `store()` — where the file and its metadata ended up in the dataset. */
 export interface StoredDocument {
-  resource: DocumentResource;
-  filePath: string;
-  metadataFilePath: string;
+  resource: DocumentResource
+  filePath: string
+  metadataFilePath: string
 }

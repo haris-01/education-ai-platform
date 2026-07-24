@@ -1,5 +1,5 @@
-import { boardPrefix } from "./board-prefix.js";
-import type { Board } from "../types.js";
+import { boardPrefix } from './board-prefix.js'
+import type { Board } from '../types.js'
 
 /**
  * Builds a stable subject identity, e.g. "CAM-IGCSE-0625". The syllabus code
@@ -7,11 +7,15 @@ import type { Board } from "../types.js";
  * and syllabus revisions ("Physics" vs "Additional Physics" vs "Combined
  * Science (Physics)") and must never be used as a key.
  */
-export function buildSubjectId(board: Board, qualification: string, syllabusCode: string): string {
+export function buildSubjectId(
+  board: Board,
+  qualification: string,
+  syllabusCode: string
+): string {
   const qualificationCode = qualification
-    .replace(/^cambridge\s+/i, "")
+    .replace(/^cambridge\s+/i, '')
     .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "");
+    .replace(/[^A-Z0-9]+/g, '')
 
-  return [boardPrefix(board), qualificationCode, syllabusCode].join("-");
+  return [boardPrefix(board), qualificationCode, syllabusCode].join('-')
 }

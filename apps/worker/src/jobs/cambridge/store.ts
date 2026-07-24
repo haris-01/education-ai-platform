@@ -4,19 +4,21 @@ import {
   paperCode,
   resolveWorkspaceRoot,
   slugify,
-} from "@education-ai/shared";
-import { copyFile, mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+} from '@education-ai/shared'
+import { copyFile, mkdir, writeFile } from 'node:fs/promises'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-import type { DocumentResource, StoredDocument } from "./types.js";
+import type { DocumentResource, StoredDocument } from './types.js'
 
-const logger = createLogger("store");
+const logger = createLogger('store')
 
 // Anchored to the monorepo root (not process.cwd()) so datasets/ always
 // lands in the same place regardless of which directory the job is run from.
-const WORKSPACE_ROOT = resolveWorkspaceRoot(path.dirname(fileURLToPath(import.meta.url)));
-const DATASETS_ROOT = path.join(WORKSPACE_ROOT, "datasets");
+const WORKSPACE_ROOT = resolveWorkspaceRoot(
+  path.dirname(fileURLToPath(import.meta.url))
+)
+const DATASETS_ROOT = path.join(WORKSPACE_ROOT, 'datasets')
 
 /**
  * Predicts where a resource would land, without downloading it. The dataset
@@ -25,7 +27,7 @@ const DATASETS_ROOT = path.join(WORKSPACE_ROOT, "datasets");
  * fetch entirely on a re-run instead of just skipping the re-write.
  */
 export function resolveStoredPath(resource: DocumentResource): string {
-  return path.join(resolveDirectory(resource), filenameFromUrl(resource.url));
+  return path.join(resolveDirectory(resource), filenameFromUrl(resource.url))
 }
 
 /**
@@ -34,25 +36,28 @@ export function resolveStoredPath(resource: DocumentResource): string {
  */
 export async function store(
   resource: DocumentResource,
-  downloadedFilePath: string,
+  downloadedFilePath: string
 ): Promise<StoredDocument> {
-  const directory = resolveDirectory(resource);
-  await mkdir(directory, { recursive: true });
+  const directory = resolveDirectory(resource)
+  await mkdir(directory, { recursive: true })
 
-  const filename = path.basename(downloadedFilePath);
-  const filePath = path.join(directory, filename);
-  const metadataFilePath = path.join(directory, `${path.parse(filename).name}.metadata.json`);
+  const filename = path.basename(downloadedFilePath)
+  const filePath = path.join(directory, filename)
+  const metadataFilePath = path.join(
+    directory,
+    `${path.parse(filename).name}.metadata.json`
+  )
 
-  await copyFile(downloadedFilePath, filePath);
-  await writeFile(metadataFilePath, JSON.stringify(resource, null, 2), "utf-8");
+  await copyFile(downloadedFilePath, filePath)
+  await writeFile(metadataFilePath, JSON.stringify(resource, null, 2), 'utf-8')
 
-  logger.info(`Stored ${filename} -> ${path.relative(process.cwd(), filePath)}`);
+  logger.info(`Stored ${filename} -> ${path.relative(process.cwd(), filePath)}`)
 
-  return { resource, filePath, metadataFilePath };
+  return { resource, filePath, metadataFilePath }
 }
 
 function resolveDirectory(resource: DocumentResource): string {
-  const { metadata } = resource;
+  const { metadata } = resource
 
   const segments = [
     slugify(metadata.board),
@@ -60,13 +65,13 @@ function resolveDirectory(resource: DocumentResource): string {
     slugify(metadata.subject),
     slugify(metadata.syllabusCode),
     ...categorySegments(resource),
-  ];
+  ]
 
-  return path.join(DATASETS_ROOT, ...segments);
+  return path.join(DATASETS_ROOT, ...segments)
 }
 
 function stripBoardPrefix(qualification: string): string {
-  return qualification.replace(/^cambridge\s+/i, "");
+  return qualification.replace(/^cambridge\s+/i, '')
 }
 
 /**
@@ -77,29 +82,33 @@ function stripBoardPrefix(qualification: string): string {
  * (type SPECIMEN_PAPER), which share a title/year/paper but not a `type`.
  */
 function categorySegments(resource: DocumentResource): string[] {
-  const { type, title, metadata } = resource;
-  const yearSegment = metadata.year ? [String(metadata.year)] : [];
+  const { type, title, metadata } = resource
+  const yearSegment = metadata.year ? [String(metadata.year)] : []
   const paperSegment =
-    metadata.paper !== undefined ? [paperCode(metadata.paper, metadata.variant)] : [];
+    metadata.paper !== undefined
+      ? [paperCode(metadata.paper, metadata.variant)]
+      : []
 
-  if (type === "SYLLABUS") {
-    return ["syllabus"];
+  if (type === 'SYLLABUS') {
+    return ['syllabus']
   }
 
-  if (type === "SPECIMEN_PAPER" || /specimen/i.test(title)) {
-    return ["specimen-papers", ...yearSegment, ...paperSegment];
+  if (type === 'SPECIMEN_PAPER' || /specimen/i.test(title)) {
+    return ['specimen-papers', ...yearSegment, ...paperSegment]
   }
 
   if (
     metadata.session ||
-    type === "QUESTION_PAPER" ||
-    type === "MARK_SCHEME" ||
-    type === "EXAMINER_REPORT" ||
-    type === "CONFIDENTIAL_INSTRUCTIONS"
+    type === 'QUESTION_PAPER' ||
+    type === 'MARK_SCHEME' ||
+    type === 'EXAMINER_REPORT' ||
+    type === 'CONFIDENTIAL_INSTRUCTIONS'
   ) {
-    const sessionSegment = metadata.session ? [metadata.session.toLowerCase()] : [];
-    return ["past-papers", ...yearSegment, ...sessionSegment, ...paperSegment];
+    const sessionSegment = metadata.session
+      ? [metadata.session.toLowerCase()]
+      : []
+    return ['past-papers', ...yearSegment, ...sessionSegment, ...paperSegment]
   }
 
-  return ["other"];
+  return ['other']
 }

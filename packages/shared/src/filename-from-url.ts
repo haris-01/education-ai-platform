@@ -1,4 +1,4 @@
-import path from "node:path";
+import path from 'node:path'
 
 /**
  * Derives a filename from a URL's path, e.g.
@@ -7,7 +7,7 @@ import path from "node:path";
  * before downloading, to skip re-downloads) always agree on the same name.
  */
 export function filenameFromUrl(url: string): string {
-  const { pathname } = new URL(url);
-  const name = path.basename(decodeURIComponent(pathname));
-  return name.length > 0 ? name : `${Date.now()}.pdf`;
+  const { pathname } = new URL(url)
+  const name = path.basename(decodeURIComponent(pathname))
+  return name.length > 0 ? name : `${Date.now()}.pdf`
 }
