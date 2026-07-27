@@ -131,6 +131,12 @@ drawings, bounding boxes, OCR (later), Document AI.
 
 Current focus: native PDFs first, scanned/hybrid later.
 
+**Status:** native-PDF path complete — text, drawings, tables, and images
+all extracted and validated against real Cambridge PDFs. OCR / scanned and
+hybrid documents deferred by design, not started. See
+[teaching notes](learning-notes/phase-02-document-intelligence.md) for why
+this phase matters and what it taught.
+
 ### Phase 3 — Question Extraction
 
 **Purpose:** Understand exam structure.
