@@ -1,4 +1,16 @@
-export interface QuestionSubPart {
+// Ids of `ImageElement` / `DrawingElement` / `TableElement` (from the
+// source `ParsedDocument`) that fall inside this entity's region of the
+// page. Kept as ids rather than embedded elements — `QuestionDocument`
+// references Phase 2's output, it doesn't duplicate it.
+export interface ElementRefs {
+  imageRefs: string[]
+
+  drawingRefs: string[]
+
+  tableRefs: string[]
+}
+
+export interface QuestionSubPart extends ElementRefs {
   label: string
 
   text: string
@@ -8,7 +20,7 @@ export interface QuestionSubPart {
   pageNumbers: number[]
 }
 
-export interface QuestionPart {
+export interface QuestionPart extends ElementRefs {
   label: string
 
   text: string
@@ -20,7 +32,7 @@ export interface QuestionPart {
   subParts: QuestionSubPart[]
 }
 
-export interface Question {
+export interface Question extends ElementRefs {
   number: number
 
   text: string

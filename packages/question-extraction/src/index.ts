@@ -1,5 +1,6 @@
 export * from './types'
 export * from './pipeline/reconstruct-lines'
 export * from './pipeline/classify-lines'
+export * from './pipeline/build-assembly-events'
 export * from './pipeline/assemble-questions'
 export * from './pipeline/build-question-document'

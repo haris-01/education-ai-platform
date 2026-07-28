@@ -1,14 +1,20 @@
+import type { AssemblyEvent } from './build-assembly-events'
 import type { ClassifiedLine } from '../types/classified-line'
-import type { Question, QuestionPart, QuestionSubPart } from '../types/question'
+import type {
+  ElementRefs,
+  Question,
+  QuestionPart,
+  QuestionSubPart,
+} from '../types/question'
 
-interface SubPartBuilder {
+interface SubPartBuilder extends ElementRefs {
   label: string
   textParts: string[]
   marks?: number
   pageNumbers: number[]
 }
 
-interface PartBuilder {
+interface PartBuilder extends ElementRefs {
   label: string
   textParts: string[]
   marks?: number
@@ -17,7 +23,7 @@ interface PartBuilder {
   currentSubPart: SubPartBuilder | null
 }
 
-interface QuestionBuilder {
+interface QuestionBuilder extends ElementRefs {
   number: number
   textParts: string[]
   marks?: number
@@ -31,15 +37,24 @@ interface AssemblyState {
   current: QuestionBuilder | null
 }
 
+const EMPTY_REFS: ElementRefs = {
+  imageRefs: [],
+  drawingRefs: [],
+  tableRefs: [],
+}
+
 /**
- * Walks classified lines (already flattened across every page, in reading
- * order) and assembles them into a `Question[]` tree: question -> parts
- * ("a", "b") -> sub-parts ("i", "ii"). A question stays open across page
+ * Walks the merged line/diagram event stream (already flattened across
+ * every page, in reading order) and assembles it into a `Question[]`
+ * tree: question -> parts ("a", "b") -> sub-parts ("i", "ii"), with
+ * diagram/table refs attached to whichever entity was open when that
+ * element's position came up. A question stays open across page
  * boundaries until the next question-number line starts, which is what
- * makes multi-page questions work — nothing here is page-scoped.
+ * makes multi-page questions (and diagrams placed on the following page)
+ * work — nothing here is page-scoped.
  */
-export function assembleQuestions(lines: ClassifiedLine[]): Question[] {
-  const finalState = lines.reduce<AssemblyState>(applyLine, {
+export function assembleQuestions(events: AssemblyEvent[]): Question[] {
+  const finalState = events.reduce<AssemblyState>(applyEvent, {
     questions: [],
     current: null,
   })
@@ -47,6 +62,13 @@ export function assembleQuestions(lines: ClassifiedLine[]): Question[] {
   return finalState.current
     ? [...finalState.questions, finalizeQuestion(finalState.current)]
     : finalState.questions
+}
+
+function applyEvent(state: AssemblyState, event: AssemblyEvent): AssemblyState {
+  if (event.kind === 'line') {
+    return applyLine(state, event.classified)
+  }
+  return applyElement(state, event)
 }
 
 function applyLine(state: AssemblyState, classified: ClassifiedLine): AssemblyState {
@@ -83,6 +105,7 @@ function applyQuestionNumber(
         textParts: [classified.content],
         marks: classified.marks,
         pageNumbers: [pageNumber],
+        ...EMPTY_REFS,
       }
     : null
 
@@ -94,6 +117,7 @@ function applyQuestionNumber(
         pageNumbers: [pageNumber],
         subParts: [],
         currentSubPart,
+        ...EMPTY_REFS,
       }
     : null
 
@@ -104,6 +128,7 @@ function applyQuestionNumber(
     pageNumbers: [pageNumber],
     parts: [],
     currentPart,
+    ...EMPTY_REFS,
   }
 
   return { questions, current }
@@ -129,6 +154,7 @@ function applySubpart(
         textParts: [classified.content],
         marks: classified.marks,
         pageNumbers: [pageNumber],
+        ...EMPTY_REFS,
       }
     : null
 
@@ -139,6 +165,7 @@ function applySubpart(
     pageNumbers: [pageNumber],
     subParts: [],
     currentSubPart,
+    ...EMPTY_REFS,
   }
 
   const current: QuestionBuilder = {
@@ -172,6 +199,7 @@ function applySubSubpart(
     textParts: [classified.content],
     marks: classified.marks,
     pageNumbers: [pageNumber],
+    ...EMPTY_REFS,
   }
 
   const currentPart: PartBuilder = {
@@ -249,6 +277,51 @@ function applyBody(
   return { questions: state.questions, current }
 }
 
+function applyElement(
+  state: AssemblyState,
+  event: Extract<AssemblyEvent, { kind: 'image' | 'drawing' | 'table' }>
+): AssemblyState {
+  const question = state.current
+  if (!question) {
+    return state
+  }
+  const part = question.currentPart
+
+  if (part?.currentSubPart) {
+    const currentSubPart = appendElementRef(
+      part.currentSubPart,
+      event.kind,
+      event.element.id
+    )
+    const currentPart: PartBuilder = { ...part, currentSubPart }
+    const current: QuestionBuilder = { ...question, currentPart }
+    return { questions: state.questions, current }
+  }
+
+  if (part) {
+    const currentPart = appendElementRef(part, event.kind, event.element.id)
+    const current: QuestionBuilder = { ...question, currentPart }
+    return { questions: state.questions, current }
+  }
+
+  const current = appendElementRef(question, event.kind, event.element.id)
+  return { questions: state.questions, current }
+}
+
+function appendElementRef<T extends ElementRefs>(
+  entity: T,
+  kind: 'image' | 'drawing' | 'table',
+  id: string
+): T {
+  if (kind === 'image') {
+    return { ...entity, imageRefs: [...entity.imageRefs, id] }
+  }
+  if (kind === 'drawing') {
+    return { ...entity, drawingRefs: [...entity.drawingRefs, id] }
+  }
+  return { ...entity, tableRefs: [...entity.tableRefs, id] }
+}
+
 function appendPageNumber(pageNumbers: number[], pageNumber: number): number[] {
   return pageNumbers.includes(pageNumber)
     ? pageNumbers
@@ -261,6 +334,9 @@ function finalizeSubPart(subPart: SubPartBuilder): QuestionSubPart {
     text: subPart.textParts.join(' ').trim(),
     marks: subPart.marks,
     pageNumbers: subPart.pageNumbers,
+    imageRefs: subPart.imageRefs,
+    drawingRefs: subPart.drawingRefs,
+    tableRefs: subPart.tableRefs,
   }
 }
 
@@ -275,6 +351,9 @@ function finalizePart(part: PartBuilder): QuestionPart {
     marks: part.marks,
     pageNumbers: part.pageNumbers,
     subParts,
+    imageRefs: part.imageRefs,
+    drawingRefs: part.drawingRefs,
+    tableRefs: part.tableRefs,
   }
 }
 
@@ -289,5 +368,8 @@ function finalizeQuestion(question: QuestionBuilder): Question {
     marks: question.marks,
     pageNumbers: question.pageNumbers,
     parts,
+    imageRefs: question.imageRefs,
+    drawingRefs: question.drawingRefs,
+    tableRefs: question.tableRefs,
   }
 }
