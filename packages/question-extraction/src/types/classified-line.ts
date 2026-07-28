@@ -43,4 +43,14 @@ export interface ClassifiedLine {
 
   // Trailing "[Total: 8]" on this line, if any.
   totalMarks?: number
+
+  // Present when role === 'body' and the line matches a bare "A ...",
+  // "B ...", "C ...", or "D ..." pattern — a *candidate* multiple-choice
+  // option, e.g. "A Both runners are moving at the same speed." This is
+  // only a pattern match, not a confirmed option: at this indent a real
+  // sentence can just as easily start with "A uniform rod..." Assembly
+  // confirms it by requiring A/B/C/D to show up in strict sequence right
+  // after a question with no sub-parts — position and pattern alone can't
+  // tell the two apart.
+  optionLabel?: string
 }

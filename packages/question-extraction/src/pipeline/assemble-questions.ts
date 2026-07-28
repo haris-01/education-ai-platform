@@ -3,6 +3,7 @@ import type { ClassifiedLine } from '../types/classified-line'
 import type {
   ElementRefs,
   Question,
+  QuestionOption,
   QuestionPart,
   QuestionSubPart,
 } from '../types/question'
@@ -30,6 +31,21 @@ interface QuestionBuilder extends ElementRefs {
   pageNumbers: number[]
   parts: QuestionPart[]
   currentPart: PartBuilder | null
+  options: QuestionOption[]
+  // The option label this question will accept next, or null once D has
+  // been consumed. Starts at "A" — a line only ever confirms as an option
+  // if it matches this exactly, which is what stops an ordinary sentence
+  // like "A uniform rod..." from being mistaken for option A.
+  nextOptionLabel: string | null
+}
+
+const OPTION_SEQUENCE = ['A', 'B', 'C', 'D']
+
+function nextOptionLabel(label: string): string | null {
+  const index = OPTION_SEQUENCE.indexOf(label)
+  return index === -1 || index === OPTION_SEQUENCE.length - 1
+    ? null
+    : OPTION_SEQUENCE[index + 1]
 }
 
 interface AssemblyState {
@@ -128,6 +144,8 @@ function applyQuestionNumber(
     pageNumbers: [pageNumber],
     parts: [],
     currentPart,
+    options: [],
+    nextOptionLabel: 'A',
     ...EMPTY_REFS,
   }
 
@@ -229,6 +247,23 @@ function applyBody(
   }
   const pageNumber = classified.line.pageNumber
   const part = question.currentPart
+
+  if (
+    !part &&
+    classified.optionLabel !== undefined &&
+    classified.optionLabel === question.nextOptionLabel
+  ) {
+    const current: QuestionBuilder = {
+      ...question,
+      options: [
+        ...question.options,
+        { label: classified.optionLabel, text: classified.content },
+      ],
+      nextOptionLabel: nextOptionLabel(classified.optionLabel),
+      pageNumbers: appendPageNumber(question.pageNumbers, pageNumber),
+    }
+    return { questions: state.questions, current }
+  }
 
   if (part?.currentSubPart) {
     const subPart = part.currentSubPart
@@ -368,6 +403,7 @@ function finalizeQuestion(question: QuestionBuilder): Question {
     marks: question.marks,
     pageNumbers: question.pageNumbers,
     parts,
+    options: question.options,
     imageRefs: question.imageRefs,
     drawingRefs: question.drawingRefs,
     tableRefs: question.tableRefs,

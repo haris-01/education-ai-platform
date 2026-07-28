@@ -32,6 +32,16 @@ export interface QuestionPart extends ElementRefs {
   subParts: QuestionSubPart[]
 }
 
+// A multiple-choice option, e.g. { label: "A", text: "Both runners are
+// moving at the same speed." }. Which option is correct isn't in the
+// question paper — that lives in the mark scheme, a separate document not
+// parsed here.
+export interface QuestionOption {
+  label: string
+
+  text: string
+}
+
 export interface Question extends ElementRefs {
   number: number
 
@@ -42,4 +52,7 @@ export interface Question extends ElementRefs {
   pageNumbers: number[]
 
   parts: QuestionPart[]
+
+  // Populated only for multiple-choice questions (empty otherwise).
+  options: QuestionOption[]
 }

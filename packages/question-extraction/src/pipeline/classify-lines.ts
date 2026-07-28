@@ -18,6 +18,16 @@ const TOTAL_MARKS_PATTERN = /\[\s*Total:\s*(\d+)\s*\]\s*$/i
 // never matches a "[Total: N]" line — no need to check the two patterns
 // against different substrings.
 const MARKS_PATTERN = /\[\s*(\d+)\s*\]\s*$/
+// Candidate multiple-choice option, e.g. "A Both runners are moving at the
+// same speed." Only a pattern match — see `optionLabel` on `ClassifiedLine`
+// for why this can't be confirmed here.
+const OPTION_PATTERN = /^([A-D])\s+(.+)$/
+// Some short-answer MCQ items pack all four options onto one physical
+// line instead of one per line, e.g. "A 2.2 cm B 2.6 cm C 13.2 cm D 15.6
+// cm" — confirmed against real 0625 paper 1 questions. Anchored end to
+// end so it only matches when all four labels appear in strict order.
+const INLINE_OPTIONS_PATTERN =
+  /^A\s+(.*?)\s+B\s+(.*?)\s+C\s+(.*?)\s+D\s+(.*)$/
 
 // Page furniture that carries no question content: copyright footers
 // ("© UCLES 2020 ... [Turn over"), "BLANK PAGE" markers, and the bare page
@@ -48,6 +58,10 @@ const PAGE_HEADER_MAX_Y = 60
  * estimate reliable — confirmed against a real paper where a lens diagram
  * label sitting 3px left of the margin caused a whole question to be
  * silently swallowed into the previous one.
+ *
+ * Usually one `Line` produces one `ClassifiedLine`, but a line packing all
+ * four MCQ options together produces four (see `INLINE_OPTIONS_PATTERN`),
+ * so this is a `flatMap`, not a `map`.
  */
 export function classifyLines(lines: Line[]): ClassifiedLine[] {
   if (lines.length === 0) {
@@ -56,7 +70,7 @@ export function classifyLines(lines: Line[]): ClassifiedLine[] {
 
   const leftMargin = computeLeftMargin(lines)
 
-  return lines.map((line) => classifyLine(line, leftMargin))
+  return lines.flatMap((line) => classifyLine(line, leftMargin))
 }
 
 function computeLeftMargin(lines: Line[]): number {
@@ -69,42 +83,46 @@ function computeLeftMargin(lines: Line[]): number {
   return Number(mode)
 }
 
-function classifyLine(line: Line, leftMargin: number): ClassifiedLine {
+function classifyLine(line: Line, leftMargin: number): ClassifiedLine[] {
   const text = line.text.trim()
   const marks = extractMatch(text, MARKS_PATTERN)
   const totalMarks = extractMatch(text, TOTAL_MARKS_PATTERN)
 
   if (isBoilerplate(text, line)) {
-    return buildClassifiedLine(line, 'boilerplate', marks, totalMarks, text, {})
+    return [buildClassifiedLine(line, 'boilerplate', marks, totalMarks, text, {})]
   }
 
   const subpartMatch = text.match(SUBPART_PATTERN)
   if (subpartMatch) {
     const afterSubpart = subpartMatch[2].trim()
     const subSubpartMatch = afterSubpart.match(SUB_SUBPART_PATTERN)
-    return buildClassifiedLine(
-      line,
-      'subpart',
-      marks,
-      totalMarks,
-      subSubpartMatch ? subSubpartMatch[2].trim() : afterSubpart,
-      {
-        partLabel: subpartMatch[1],
-        nestedPartLabel: subSubpartMatch?.[1],
-      }
-    )
+    return [
+      buildClassifiedLine(
+        line,
+        'subpart',
+        marks,
+        totalMarks,
+        subSubpartMatch ? subSubpartMatch[2].trim() : afterSubpart,
+        {
+          partLabel: subpartMatch[1],
+          nestedPartLabel: subSubpartMatch?.[1],
+        }
+      ),
+    ]
   }
 
   const subSubpartMatch = text.match(SUB_SUBPART_PATTERN)
   if (subSubpartMatch) {
-    return buildClassifiedLine(
-      line,
-      'subSubpart',
-      marks,
-      totalMarks,
-      subSubpartMatch[2].trim(),
-      { partLabel: subSubpartMatch[1] }
-    )
+    return [
+      buildClassifiedLine(
+        line,
+        'subSubpart',
+        marks,
+        totalMarks,
+        subSubpartMatch[2].trim(),
+        { partLabel: subSubpartMatch[1] }
+      ),
+    ]
   }
 
   const questionMatch = text.match(QUESTION_NUMBER_PATTERN)
@@ -121,21 +139,47 @@ function classifyLine(line: Line, leftMargin: number): ClassifiedLine {
       afterEmbeddedSubpart ??
       afterQuestion
 
-    return buildClassifiedLine(
-      line,
-      'questionNumber',
-      marks,
-      totalMarks,
-      content,
-      {
-        questionNumber: Number(questionMatch[1]),
-        partLabel: embeddedSubpartMatch?.[1],
-        nestedPartLabel: embeddedSubSubpartMatch?.[1],
-      }
+    return [
+      buildClassifiedLine(
+        line,
+        'questionNumber',
+        marks,
+        totalMarks,
+        content,
+        {
+          questionNumber: Number(questionMatch[1]),
+          partLabel: embeddedSubpartMatch?.[1],
+          nestedPartLabel: embeddedSubSubpartMatch?.[1],
+        }
+      ),
+    ]
+  }
+
+  const inlineOptions = text.match(INLINE_OPTIONS_PATTERN)
+  if (inlineOptions) {
+    const [, a, b, c, d] = inlineOptions
+    return (['A', 'B', 'C', 'D'] as const).map((label, index) =>
+      buildClassifiedLine(
+        line,
+        'body',
+        undefined,
+        undefined,
+        [a, b, c, d][index].trim(),
+        { optionLabel: label }
+      )
     )
   }
 
-  return buildClassifiedLine(line, 'body', marks, totalMarks, text, {})
+  const optionMatch = text.match(OPTION_PATTERN)
+  if (optionMatch) {
+    return [
+      buildClassifiedLine(line, 'body', marks, totalMarks, optionMatch[2].trim(), {
+        optionLabel: optionMatch[1],
+      }),
+    ]
+  }
+
+  return [buildClassifiedLine(line, 'body', marks, totalMarks, text, {})]
 }
 
 function buildClassifiedLine(
@@ -146,7 +190,7 @@ function buildClassifiedLine(
   content: string,
   fields: Pick<
     ClassifiedLine,
-    'questionNumber' | 'partLabel' | 'nestedPartLabel'
+    'questionNumber' | 'partLabel' | 'nestedPartLabel' | 'optionLabel'
   >
 ): ClassifiedLine {
   return {
