@@ -65,6 +65,19 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
+  packages/question-extraction:
+    dependencies:
+      '@education-ai/document-ai':
+        specifier: workspace:*
+        version: link:../document-ai
+    devDependencies:
+      '@types/node':
+        specifier: ^26.1.1
+        version: 26.1.1
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+
   packages/shared:
     devDependencies:
       '@types/node':

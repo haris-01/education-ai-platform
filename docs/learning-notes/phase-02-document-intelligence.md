@@ -350,6 +350,33 @@ reinforcing why you're building each module and how it contributes to
 becoming an AI engineer, rather than letting the project become "just
 another coding exercise."
 
+## Known Limitations (Deferred, Not Blocking)
+
+`parseNativePdf()` produces a complete `ParsedDocument`, but the extraction
+quality has known rough edges. None of these block Phase 3 — they're
+recorded here so they aren't rediscovered from scratch later.
+
+- **Whitespace runs.** pdfjs emits standalone `" "` items as their own text
+  elements alongside real words (`"PHYSICS"`, `" "`, `"0625/04"`). Needs
+  run-merging before text is genuinely usable as words/lines.
+- **No reading order.** Pages currently expose a flat list of text elements,
+  not a `Page → Line → Word` structure. This is the most important gap to
+  close early in Phase 3 — question numbering and sub-part detection depend
+  on knowing line order, not just having coordinates.
+- **Hybrid classification is unrefined.** The scanned/hybrid heuristic
+  (e.g. flagging mark schemes) hasn't been validated carefully. Left alone
+  until OCR work actually starts.
+- **Unresolved image objects.** Images referenced only inside nested Form
+  XObjects sometimes never resolve via pdfjs's callback API (handled today
+  with a timeout + skip, not a real fix). This is a pdfjs limitation, not
+  worth more time now.
+- **Drawings are undifferentiated.** Every vector drawing is classified as
+  a generic `"drawing"` — no distinction between circuit, graph, geometric
+  figure, chart, decorative box, or page border. Fine for now.
+- **Tables expose geometry, not content.** `TableElement` gives row/column
+  boundaries and a bounding box, not cell text. Cell-level extraction is
+  deferred until something downstream actually needs table contents.
+
 ## Concrete Implementation Reference
 
 For the actual engineering behind this phase — the CTM/affine-transform

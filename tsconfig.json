@@ -15,6 +15,9 @@
     },
     {
       "path": "./packages/document-ai"
+    },
+    {
+      "path": "./packages/question-extraction"
     }
     // {
     //   "path": "./packages/database"
