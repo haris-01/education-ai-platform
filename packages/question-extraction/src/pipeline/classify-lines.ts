@@ -51,13 +51,14 @@ const PAGE_HEADER_MAX_Y = 60
  * Derived from patterns observed across real Cambridge 0625 papers (see
  * playground/probe-lines.ts output), not guessed blind.
  *
- * Pass every line in the document, not one page at a time. The left
- * margin is derived from the most common line-start x across whatever is
- * passed in, and a single page can have too few margin-aligned lines (or
- * a diagram label poking further left than the real margin) to make that
- * estimate reliable — confirmed against a real paper where a lens diagram
- * label sitting 3px left of the margin caused a whole question to be
- * silently swallowed into the previous one.
+ * Pass every line in the document, not one page at a time — the left
+ * margin needs enough samples across the whole document to be reliable,
+ * for two reasons confirmed against real papers: a single page can have a
+ * diagram label poking left of the true margin (see
+ * `computeLeftMargin`'s MIN_MARGIN_OCCURRENCES), and body-text indents
+ * (e.g. "(i)"-nested continuation lines) can simply be more numerous than
+ * question-number lines, which would make a same-page "most common x"
+ * estimate land on the wrong indent level entirely.
  *
  * Usually one `Line` produces one `ClassifiedLine`, but a line packing all
  * four MCQ options together produces four (see `INLINE_OPTIONS_PATTERN`),
@@ -73,14 +74,33 @@ export function classifyLines(lines: Line[]): ClassifiedLine[] {
   return lines.flatMap((line) => classifyLine(line, leftMargin))
 }
 
+// A one-off diagram label poking left of the margin should never win —
+// this is the minimum number of lines that must share an x-bucket before
+// it's treated as a real structural indent level, not noise.
+const MIN_MARGIN_OCCURRENCES = 3
+
+// The margin is the *smallest* x that recurs often enough to be
+// structural — not the most common x. The most common x is usually the
+// document's dominant body-text indent (e.g. sub-part continuation
+// lines), which sits to the right of the true margin, not at it; picking
+// it as "the margin" doesn't just fail to reject deeper indents, it can
+// actively misread a numbered answer-blank list ("1 ....", "2 ....") at
+// that same indent as new question numbers — confirmed against a real
+// paper where this produced a bogus question-number restart mid-document.
 function computeLeftMargin(lines: Line[]): number {
   const counts = lines.reduce<Record<number, number>>((acc, line) => {
     const bucket = Math.round(line.boundingBox.x)
     return { ...acc, [bucket]: (acc[bucket] ?? 0) + 1 }
   }, {})
 
-  const [mode] = Object.entries(counts).sort(([, a], [, b]) => b - a)[0]
-  return Number(mode)
+  const structuralBuckets = Object.entries(counts)
+    .filter(([, count]) => count >= MIN_MARGIN_OCCURRENCES)
+    .map(([bucket]) => Number(bucket))
+
+  if (structuralBuckets.length === 0) {
+    return Math.min(...lines.map((line) => line.boundingBox.x))
+  }
+  return Math.min(...structuralBuckets)
 }
 
 function classifyLine(line: Line, leftMargin: number): ClassifiedLine[] {

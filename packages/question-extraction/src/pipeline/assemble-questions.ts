@@ -31,11 +31,22 @@ interface QuestionBuilder extends ElementRefs {
   pageNumbers: number[]
   parts: QuestionPart[]
   currentPart: PartBuilder | null
+  // Confirmed options — only ever set all at once, when D completes a
+  // clean A-B-C-D run (see `pendingOptions`).
   options: QuestionOption[]
+  // A run of option-labelled lines seen so far that hasn't reached D yet.
+  // Text this ordinary — "A load is fixed to trolley P." is exactly as
+  // valid a pattern match as "A Both runners are moving..."; the only
+  // thing that tells a real option apart from a sentence starting with
+  // "A" is whether B, C, and D actually follow. So a match only commits
+  // to `options` once the full run completes; anything abandoned along
+  // the way (see `flushPendingOptions`) goes back into ordinary text
+  // instead of being silently dropped — confirmed against a real paper
+  // where "A load is fixed to trolley P." (an ordinary sentence, not an
+  // option) was getting misread as a lone, unconfirmed option A.
+  pendingOptions: QuestionOption[]
   // The option label this question will accept next, or null once D has
-  // been consumed. Starts at "A" — a line only ever confirms as an option
-  // if it matches this exactly, which is what stops an ordinary sentence
-  // like "A uniform rod..." from being mistaken for option A.
+  // been consumed or the run has been abandoned.
   nextOptionLabel: string | null
 }
 
@@ -145,6 +156,7 @@ function applyQuestionNumber(
     parts: [],
     currentPart,
     options: [],
+    pendingOptions: [],
     nextOptionLabel: 'A',
     ...EMPTY_REFS,
   }
@@ -156,10 +168,11 @@ function applySubpart(
   state: AssemblyState,
   classified: ClassifiedLine
 ): AssemblyState {
-  const question = state.current
-  if (!question || classified.partLabel === undefined) {
+  const rawQuestion = state.current
+  if (!rawQuestion || classified.partLabel === undefined) {
     return state
   }
+  const question = flushPendingOptions(rawQuestion)
   const pageNumber = classified.line.pageNumber
 
   const parts = question.currentPart
@@ -241,29 +254,37 @@ function applyBody(
   state: AssemblyState,
   classified: ClassifiedLine
 ): AssemblyState {
-  const question = state.current
-  if (!question) {
+  const rawQuestion = state.current
+  if (!rawQuestion) {
     return state
   }
   const pageNumber = classified.line.pageNumber
-  const part = question.currentPart
+  const part = rawQuestion.currentPart
 
   if (
     !part &&
     classified.optionLabel !== undefined &&
-    classified.optionLabel === question.nextOptionLabel
+    classified.optionLabel === rawQuestion.nextOptionLabel
   ) {
+    const pendingOptions = [
+      ...rawQuestion.pendingOptions,
+      { label: classified.optionLabel, text: classified.content },
+    ]
+    const advanced = nextOptionLabel(classified.optionLabel)
+    // advanced === null means D just completed the run — commit it.
     const current: QuestionBuilder = {
-      ...question,
-      options: [
-        ...question.options,
-        { label: classified.optionLabel, text: classified.content },
-      ],
-      nextOptionLabel: nextOptionLabel(classified.optionLabel),
-      pageNumbers: appendPageNumber(question.pageNumbers, pageNumber),
+      ...rawQuestion,
+      pendingOptions: advanced === null ? [] : pendingOptions,
+      options: advanced === null ? pendingOptions : rawQuestion.options,
+      nextOptionLabel: advanced,
+      pageNumbers: appendPageNumber(rawQuestion.pageNumbers, pageNumber),
     }
     return { questions: state.questions, current }
   }
+
+  // This line didn't continue the option run — anything buffered wasn't
+  // really options after all, so recover it as ordinary text first.
+  const question = flushPendingOptions(rawQuestion)
 
   if (part?.currentSubPart) {
     const subPart = part.currentSubPart
@@ -310,6 +331,25 @@ function applyBody(
     pageNumbers: appendPageNumber(question.pageNumbers, pageNumber),
   }
   return { questions: state.questions, current }
+}
+
+// A pending option run that never reached D wasn't really options —
+// recover its text into the question's own stem text (pending options can
+// only ever accumulate before any sub-part opens, so the question's own
+// `textParts` is always the right home for them) instead of losing it.
+function flushPendingOptions(question: QuestionBuilder): QuestionBuilder {
+  if (question.pendingOptions.length === 0) {
+    return question
+  }
+  const recoveredText = question.pendingOptions.map(
+    (option) => `${option.label} ${option.text}`
+  )
+  return {
+    ...question,
+    textParts: [...question.textParts, ...recoveredText],
+    pendingOptions: [],
+    nextOptionLabel: null,
+  }
 }
 
 function applyElement(
@@ -392,7 +432,8 @@ function finalizePart(part: PartBuilder): QuestionPart {
   }
 }
 
-function finalizeQuestion(question: QuestionBuilder): Question {
+function finalizeQuestion(rawQuestion: QuestionBuilder): Question {
+  const question = flushPendingOptions(rawQuestion)
   const parts = question.currentPart
     ? [...question.parts, finalizePart(question.currentPart)]
     : question.parts

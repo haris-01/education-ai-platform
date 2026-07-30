@@ -8,7 +8,7 @@ import {
 } from '../packages/question-extraction/src/index.js'
 
 const SAMPLE_PDF =
-  'datasets/cambridge/igcse/physics/0625/specimen-papers/2023/1/595783-2023-specimen-paper-1.pdf'
+  'datasets/cambridge/igcse/physics/0625/past-papers/2024/mj/41/671385-june-2024-question-paper-41.pdf'
 
 async function main(): Promise<void> {
   const filePath = path.join(resolveWorkspaceRoot(process.cwd()), SAMPLE_PDF)
@@ -19,7 +19,7 @@ async function main(): Promise<void> {
   const allLines = parsed.pages.flatMap((page) => reconstructLines(page))
   const allClassified = classifyLines(allLines)
 
-  const pagesToInspect = [6, 7]
+  const pagesToInspect = [4, 5]
 
   pagesToInspect.forEach((pageNumber) => {
     const classified = allClassified.filter(
