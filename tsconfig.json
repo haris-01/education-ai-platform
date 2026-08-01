@@ -18,6 +18,9 @@
     },
     {
       "path": "./packages/question-extraction"
+    },
+    {
+      "path": "./packages/mark-scheme-extraction"
     }
     // {
     //   "path": "./packages/database"
