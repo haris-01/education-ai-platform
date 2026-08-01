@@ -218,9 +218,17 @@ function buildClassifiedLine(
     role,
     marks,
     totalMarks,
-    content,
+    // marks/totalMarks are already pulled out as numbers above — stripping
+    // the bracket text itself here too means downstream `text` fields
+    // (Question/QuestionPart/QuestionSubPart) read as clean prose instead
+    // of ending in a literal "[3]" or "[Total: 8]".
+    content: stripTrailingMarksBracket(content),
     ...fields,
   }
+}
+
+function stripTrailingMarksBracket(content: string): string {
+  return content.replace(TOTAL_MARKS_PATTERN, '').replace(MARKS_PATTERN, '').trim()
 }
 
 function isBoilerplate(text: string, line: Line): boolean {

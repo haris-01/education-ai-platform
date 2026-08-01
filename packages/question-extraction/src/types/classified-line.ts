@@ -17,10 +17,13 @@ export interface ClassifiedLine {
   role: LineRole
 
   // The line's text with every leading structural token stripped (question
-  // number, sub-part label, sub-sub-part label — however many apply). This
-  // is the text that actually belongs to the deepest entity this line
-  // starts, e.g. "2 (a) Complete the definitions..." -> "Complete the
-  // definitions...". Equal to the full line text when role === 'body'.
+  // number, sub-part label, sub-sub-part label — however many apply) and
+  // any trailing "[3]" / "[Total: 8]" bracket stripped too (those numbers
+  // already live in `marks`/`totalMarks` below). This is the text that
+  // actually belongs to the deepest entity this line starts, e.g.
+  // "2 (a) Complete the definitions... [2]" -> "Complete the
+  // definitions...". Equal to the full line text (minus any bracket) when
+  // role === 'body'.
   content: string
 
   // Present when role === 'questionNumber'.

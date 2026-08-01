@@ -166,13 +166,10 @@ describe('buildQuestionDocument', () => {
     const { questions } = buildQuestionDocument(parsedDocument([p1, p2]))
 
     const [q] = questions
-    // The trailing "[2]"/"[1]" text stays in `text` (only the numeric
-    // value is pulled out separately as `marks`) — the point of this test
-    // is that the boilerplate lines contribute nothing, not that marks
-    // brackets are stripped from prose.
     expect(q.parts.map((part) => part.text)).toEqual([
-      'Explain the effect. .......... [2]',
-      'A second part on the next page. .......... [1]',
+      'Explain the effect. ..........',
+      'A second part on the next page. ..........',
     ])
+    expect(q.parts.map((part) => part.marks)).toEqual([2, 1])
   })
 })

@@ -58,18 +58,20 @@ describe('classifyLines', () => {
     expect(classified.content).toBe('State the name of the process.')
   })
 
-  it('extracts a trailing mark count', () => {
+  it('extracts a trailing mark count and strips the bracket out of content', () => {
     const [classified] = classifyLines([
       line(1, 'acceleration = .......... [3]', 95, 200),
     ])
     expect(classified.marks).toBe(3)
     expect(classified.role).toBe('body')
+    expect(classified.content).toBe('acceleration = ..........')
   })
 
   it('extracts a total-marks line without it also reading as a per-line mark', () => {
     const [classified] = classifyLines([line(1, '[Total: 8]', 504, 300)])
     expect(classified.totalMarks).toBe(8)
     expect(classified.marks).toBeUndefined()
+    expect(classified.content).toBe('')
   })
 
   describe('boilerplate', () => {
