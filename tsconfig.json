@@ -21,6 +21,9 @@
     },
     {
       "path": "./packages/mark-scheme-extraction"
+    },
+    {
+      "path": "./packages/syllabus-extraction"
     }
     // {
     //   "path": "./packages/database"
