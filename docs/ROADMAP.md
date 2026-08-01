@@ -137,7 +137,7 @@ hybrid documents deferred by design, not started. See
 [teaching notes](learning-notes/phase-02-document-intelligence.md) for why
 this phase matters and what it taught.
 
-### Phase 3 — Question Extraction
+### Phase 3 — Question Extraction ✅
 
 **Purpose:** Understand exam structure.
 
@@ -145,6 +145,15 @@ this phase matters and what it taught.
 
 **Learn:** Layout analysis, pattern recognition, question numbering,
 sub-parts, marks, diagram references, multi-page questions.
+
+**Status:** core complete — question numbering, sub-parts, sub-sub-parts,
+marks, multiple-choice options, and diagram/table references all
+extracted and validated against all 12 real Cambridge 0625 question
+papers, with 40 automated tests. Diagram-positioned MCQ options (options
+rendered as scattered labels around a picture rather than sequential
+text) deferred by design — needs spatial reasoning, not text parsing.
+See [teaching notes](learning-notes/phase-03-question-extraction.md) for
+why this phase matters and what it taught.
 
 ### Phase 4 — Knowledge Builder
 
