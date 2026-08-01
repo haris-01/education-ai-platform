@@ -24,6 +24,9 @@
     },
     {
       "path": "./packages/syllabus-extraction"
+    },
+    {
+      "path": "./packages/examiner-report-extraction"
     }
     // {
     //   "path": "./packages/database"
