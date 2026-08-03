@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.base.json",
+
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    "composite": true,
+    "types": ["node"]
+  },
+
+  "include": [
+    "src"
+  ],
+
+  "references": [
+    { "path": "../document-ai" },
+    { "path": "../question-extraction" },
+    { "path": "../syllabus-extraction" }
+  ]
+}

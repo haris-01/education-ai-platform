@@ -27,6 +27,9 @@
     },
     {
       "path": "./packages/examiner-report-extraction"
+    },
+    {
+      "path": "./packages/topic-mapping"
     }
     // {
     //   "path": "./packages/database"
