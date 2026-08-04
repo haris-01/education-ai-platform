@@ -1,9 +1,10 @@
-import type { TableElement } from '../types'
+import type { TableElement, TextElement } from '../types'
 import type { Line } from './box-shape'
 import { classifyThinBox } from './box-shape'
 import { clusterByProximity } from './cluster-boxes'
 import type { BoxCluster } from './cluster-boxes'
 import { extractPathBoxes } from './extract-path-boxes'
+import { extractTableCellText } from './extract-table-cell-text'
 import type { OperatorList, PageViewport } from './pdfjs-types'
 
 // Table gridlines are drawn touching or nearly touching each other, so a
@@ -28,7 +29,8 @@ const MIN_TABLE_SIZE_PX = 20
 export function extractTableElements(
   operatorList: OperatorList,
   viewport: PageViewport,
-  pageNumber: number
+  pageNumber: number,
+  textElements: TextElement[]
 ): TableElement[] {
   const lines = extractPathBoxes(operatorList, viewport)
     .map(classifyThinBox)
@@ -41,14 +43,17 @@ export function extractTableElements(
   )
 
   return clusters
-    .map((cluster, index) => toTableElement(cluster, pageNumber, index))
+    .map((cluster, index) =>
+      toTableElement(cluster, pageNumber, index, textElements)
+    )
     .filter((table): table is TableElement => table !== null)
 }
 
 function toTableElement(
   cluster: BoxCluster<Line>,
   pageNumber: number,
-  index: number
+  index: number,
+  textElements: TextElement[]
 ): TableElement | null {
   const rowBoundaries = uniquePositions(
     cluster.items
@@ -77,6 +82,14 @@ function toTableElement(
     boundingBox: cluster.boundingBox,
     rows: rowBoundaries.length - 1,
     columns: columnBoundaries.length - 1,
+    rowBoundaries,
+    columnBoundaries,
+    cells: extractTableCellText(
+      rowBoundaries,
+      columnBoundaries,
+      pageNumber,
+      textElements
+    ),
   }
 }
 

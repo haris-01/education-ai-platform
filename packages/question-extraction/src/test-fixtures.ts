@@ -75,10 +75,21 @@ export function tableElement(
     boundingBox: { x, y, width: 100, height: 50 },
     rows: 2,
     columns: 2,
+    rowBoundaries: [y, y + 25, y + 50],
+    columnBoundaries: [x, x + 50, x + 100],
+    cells: [
+      ['', ''],
+      ['', ''],
+    ],
   }
 }
 
-export function line(pageNumber: number, text: string, x: number, y: number): Line {
+export function line(
+  pageNumber: number,
+  text: string,
+  x: number,
+  y: number
+): Line {
   return {
     pageNumber,
     text,

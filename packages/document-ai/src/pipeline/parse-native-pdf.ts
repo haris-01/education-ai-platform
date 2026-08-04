@@ -78,7 +78,12 @@ async function parsePage(
     viewport,
     pageNumber
   )
-  const tableElements = extractTableElements(operatorList, viewport, pageNumber)
+  const tableElements = extractTableElements(
+    operatorList,
+    viewport,
+    pageNumber,
+    textElements
+  )
   const imageElements = await extractImageElements(
     page,
     operatorList,
