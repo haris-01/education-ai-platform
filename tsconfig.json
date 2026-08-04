@@ -30,6 +30,9 @@
     },
     {
       "path": "./packages/topic-mapping"
+    },
+    {
+      "path": "./packages/knowledge-builder"
     }
     // {
     //   "path": "./packages/database"
