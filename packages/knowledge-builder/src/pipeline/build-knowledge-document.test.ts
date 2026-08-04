@@ -7,6 +7,7 @@ import {
   question,
   questionDocument,
   syllabusOverview,
+  theoryMarkScheme,
   topic,
 } from '../test-fixtures'
 import { buildKnowledgeDocument } from './build-knowledge-document'
@@ -80,6 +81,37 @@ describe('buildKnowledgeDocument', () => {
     expect(knowledge.questions[1].examinerCommentary).toBe(
       'Diagrams were often mislabelled.'
     )
+  })
+
+  it('groups theory mark scheme sub-parts under their whole question', () => {
+    const doc = questionDocument([
+      question(2, 'A trolley collides with a spring.', { marks: 6 }),
+    ])
+
+    const knowledge = buildKnowledgeDocument({
+      questionDocument: doc,
+      syllabus: SYLLABUS,
+      theoryMarkScheme: theoryMarkScheme([
+        {
+          questionNumber: '2(a)(i)',
+          markPoints: [{ text: '0.16 m/s', markCode: 'A3' }],
+        },
+        {
+          questionNumber: '2(b)',
+          markPoints: [
+            { text: 'elastic energy store', markCode: 'B1' },
+            { text: 'kinetic energy store', markCode: 'B1' },
+          ],
+        },
+      ]),
+    })
+
+    expect(knowledge.questions[0].correctAnswer).toBeUndefined()
+    expect(knowledge.questions[0].markingPoints).toEqual([
+      { questionNumber: '2(a)(i)', text: '0.16 m/s', markCode: 'A3' },
+      { questionNumber: '2(b)', text: 'elastic energy store', markCode: 'B1' },
+      { questionNumber: '2(b)', text: 'kinetic energy store', markCode: 'B1' },
+    ])
   })
 
   it('carries the full syllabus topic and assessment-objective lists at document level', () => {

@@ -1,5 +1,8 @@
 import type { PaperExaminerReport } from '@education-ai/examiner-report-extraction'
-import type { McqMarkScheme } from '@education-ai/mark-scheme-extraction'
+import type {
+  McqMarkScheme,
+  TheoryMarkScheme,
+} from '@education-ai/mark-scheme-extraction'
 import type {
   Question,
   QuestionDocument,
@@ -9,6 +12,7 @@ import { assignTopics } from '@education-ai/topic-mapping'
 
 import type {
   KnowledgeDocument,
+  KnowledgeMarkingPoint,
   KnowledgeQuestion,
 } from '../types/knowledge-document'
 
@@ -19,9 +23,11 @@ export interface KnowledgeBuilderInput {
 
   syllabus: SyllabusOverview
 
-  // Undefined for theory papers (mark-scheme-extraction is MCQ-only today)
-  // or when no mark scheme was collected for this paper.
+  // MCQ papers only.
   mcqMarkScheme?: McqMarkScheme
+
+  // Theory papers only.
+  theoryMarkScheme?: TheoryMarkScheme
 
   // A single paper's commentary, already selected by the caller from the
   // (possibly multi-paper) `ExaminerReport` — this builder works on one
@@ -30,15 +36,21 @@ export interface KnowledgeBuilderInput {
 }
 
 // Joins one question paper with everything the other Phase 4 extractors
-// know about it — topic (via topic-mapping), correct answer (via the MCQ
-// mark scheme), and examiner commentary — into the single rich
-// `KnowledgeDocument` the roadmap defines as Phase 4's output. Pure join:
-// no new inference happens here beyond the topic assignment it delegates
-// to `assignTopics`.
+// know about it — topic (via topic-mapping), correct answer or marking
+// points (via the MCQ or theory mark scheme), and examiner commentary —
+// into the single rich `KnowledgeDocument` the roadmap defines as Phase
+// 4's output. Pure join: no new inference happens here beyond the topic
+// assignment it delegates to `assignTopics`.
 export function buildKnowledgeDocument(
   input: KnowledgeBuilderInput
 ): KnowledgeDocument {
-  const { questionDocument, syllabus, mcqMarkScheme, examinerReport } = input
+  const {
+    questionDocument,
+    syllabus,
+    mcqMarkScheme,
+    theoryMarkScheme,
+    examinerReport,
+  } = input
 
   const topicByQuestion = new Map(
     assignTopics(questionDocument, syllabus).assignments.map((a) => [
@@ -49,6 +61,7 @@ export function buildKnowledgeDocument(
   const answerByQuestion = new Map(
     (mcqMarkScheme?.answers ?? []).map((a) => [a.questionNumber, a])
   )
+  const markingPointsByQuestion = groupMarkingPointsByQuestion(theoryMarkScheme)
   const commentaryByQuestion = new Map(
     (examinerReport?.questionComments ?? []).map((c) => [
       c.questionNumber,
@@ -62,6 +75,7 @@ export function buildKnowledgeDocument(
         question,
         topicByQuestion,
         answerByQuestion,
+        markingPointsByQuestion,
         commentaryByQuestion
       )
   )
@@ -79,10 +93,38 @@ export function buildKnowledgeDocument(
   }
 }
 
+// Theory mark scheme rows are keyed by sub-part ("2(a)(i)"), one grain
+// finer than `KnowledgeQuestion` models — grouped here under the leading
+// question number so each whole question carries every sub-part's points.
+function groupMarkingPointsByQuestion(
+  theoryMarkScheme: TheoryMarkScheme | undefined
+): Map<number, KnowledgeMarkingPoint[]> {
+  return (theoryMarkScheme?.questions ?? []).reduce((map, entry) => {
+    const questionNumber = leadingQuestionNumber(entry.questionNumber)
+    if (questionNumber === undefined) {
+      return map
+    }
+    const points = entry.markPoints.map((markPoint): KnowledgeMarkingPoint => ({
+      ...markPoint,
+      questionNumber: entry.questionNumber,
+    }))
+    return map.set(questionNumber, [
+      ...(map.get(questionNumber) ?? []),
+      ...points,
+    ])
+  }, new Map<number, KnowledgeMarkingPoint[]>())
+}
+
+function leadingQuestionNumber(ref: string): number | undefined {
+  const match = ref.match(/^(\d+)/)
+  return match ? Number(match[1]) : undefined
+}
+
 function buildKnowledgeQuestion(
   question: Question,
   topicByQuestion: Map<number, { topicNumber?: number; topicName?: string }>,
   answerByQuestion: Map<number, { answer: string }>,
+  markingPointsByQuestion: Map<number, KnowledgeMarkingPoint[]>,
   commentaryByQuestion: Map<number, string>
 ): KnowledgeQuestion {
   const topic = topicByQuestion.get(question.number)
@@ -96,6 +138,7 @@ function buildKnowledgeQuestion(
     topicNumber: topic?.topicNumber,
     topicName: topic?.topicName,
     correctAnswer: answer?.answer,
+    markingPoints: markingPointsByQuestion.get(question.number),
     examinerCommentary: commentary,
     imageRefs: question.imageRefs,
     drawingRefs: question.drawingRefs,

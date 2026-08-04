@@ -1,8 +1,17 @@
+import type { MarkPoint } from '@education-ai/mark-scheme-extraction'
 import type { ElementRefs } from '@education-ai/question-extraction'
 import type {
   AssessmentObjective,
   SyllabusTopic,
 } from '@education-ai/syllabus-extraction'
+
+// A theory mark scheme's `MarkPoint`, carrying forward the exam's own
+// sub-part reference (e.g. "2(a)(i)") — `KnowledgeQuestion` only models
+// whole questions, not sub-parts, so that reference is the one place the
+// finer-grained location survives.
+export interface KnowledgeMarkingPoint extends MarkPoint {
+  questionNumber: string
+}
 
 // One question, enriched with everything the earlier Phase 4 extractors
 // know about it. Every enrichment field is optional and stays `undefined`
@@ -22,10 +31,16 @@ export interface KnowledgeQuestion extends ElementRefs {
 
   topicName?: string
 
-  // MCQ only ("A"-"D", or "Discounted") — from the mark scheme. Undefined
-  // for theory questions (mark scheme coverage is MCQ-only, see
-  // mark-scheme-extraction) or when no mark scheme was supplied.
+  // MCQ only ("A"-"D", or "Discounted") — from the MCQ mark scheme.
+  // Undefined for theory questions (see `markingPoints` instead) or when
+  // no mark scheme was supplied.
   correctAnswer?: string
+
+  // Theory papers only — every marking point across this question's
+  // sub-parts, from the theory mark scheme. Undefined for MCQ questions
+  // (see `correctAnswer` instead) or when no theory mark scheme was
+  // supplied.
+  markingPoints?: KnowledgeMarkingPoint[]
 
   // The examiner's commentary for this question, verbatim from the
   // examiner report. Undefined when no examiner report was supplied, or

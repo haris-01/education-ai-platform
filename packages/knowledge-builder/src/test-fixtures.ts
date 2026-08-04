@@ -2,6 +2,8 @@ import type { PaperExaminerReport } from '@education-ai/examiner-report-extracti
 import type {
   McqAnswer,
   McqMarkScheme,
+  QuestionMarkScheme,
+  TheoryMarkScheme,
 } from '@education-ai/mark-scheme-extraction'
 import type {
   ElementRefs,
@@ -86,6 +88,21 @@ export function mcqMarkScheme(answers: McqAnswer[]): McqMarkScheme {
       extractorVersion: 'test',
     },
     answers,
+  }
+}
+
+export function theoryMarkScheme(
+  questions: QuestionMarkScheme[]
+): TheoryMarkScheme {
+  return {
+    metadata: {
+      resourceId: 'test-theory-mark-scheme',
+      title: 'test-theory-mark-scheme',
+      pageCount: 1,
+      extractedAt: new Date('2024-01-01T00:00:00Z'),
+      extractorVersion: 'test',
+    },
+    questions,
   }
 }
 
