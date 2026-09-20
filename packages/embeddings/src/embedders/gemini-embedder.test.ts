@@ -204,7 +204,13 @@ describe('createGeminiEmbedder', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
     expect(vectors).toHaveLength(1)
-    expect(waits).toEqual([{ reason: 'quota reached, retry 1/5', ms: 3000 }])
+    // The wait the server asked for is what matters here. Its exact
+    // wording belongs to @education-ai/google-ai, which owns the retry
+    // and tests the phrasing; pinning it twice only breaks this file
+    // when that package rewords a message.
+    expect(waits).toHaveLength(1)
+    expect(waits[0].ms).toBe(3000)
+    expect(waits[0].reason).toMatch(/quota/i)
   })
 
   it('falls back to a fixed wait when a 429 carries no RetryInfo', async () => {
@@ -248,7 +254,7 @@ describe('createGeminiEmbedder', () => {
     vi.useFakeTimers()
     await expect(
       withoutWaiting(embedder.embed(['x'], 'document'))
-    ).rejects.toThrow('100 embed requests per minute')
+    ).rejects.toThrow(/quota not cleared/i)
   })
 
   it('paces between batches to stay under the quota', async () => {
