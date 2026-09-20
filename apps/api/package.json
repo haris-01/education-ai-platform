@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
-    "start": "tsx --env-file-if-exists=../../.env src/main.ts",
+    "dev": "node api.js && tsx watch --env-file-if-exists=../../.env src/main.ts",
+    "start": "node api.js && tsx --env-file-if-exists=../../.env src/main.ts",
     "test": "vitest run"
   },
   "devDependencies": {

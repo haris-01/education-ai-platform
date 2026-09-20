@@ -7,7 +7,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "clean": "pnpm -r --if-present clean",
-    "dev": "pnpm -r --if-present dev",
+    "dev": "node api.js && pnpm -r --if-present dev",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -20,9 +20,9 @@
     "probe:retrieval": "tsx --env-file-if-exists=.env playground/probe-retrieval.ts",
     "probe:generate": "tsx --env-file-if-exists=.env playground/probe-generate.ts",
     "test:retrieval": "RUN_RETRIEVAL_QUALITY=1 pnpm --filter @education-ai/vector-store test",
-    "dev:api": "pnpm --filter @education-ai/api dev",
-    "dev:web": "pnpm --filter @education-ai/web dev",
-    "dev:worker": "pnpm --filter @education-ai/worker dev",
+    "dev:api": "node api.js && pnpm --filter @education-ai/api dev",
+    "dev:web": "node api.js && pnpm --filter @education-ai/web dev",
+    "dev:worker": "node api.js && pnpm --filter @education-ai/worker dev",
     "build:api": "pnpm --filter @education-ai/api build",
     "build:web": "pnpm --filter @education-ai/web build",
     "build:worker": "pnpm --filter @education-ai/worker build"
