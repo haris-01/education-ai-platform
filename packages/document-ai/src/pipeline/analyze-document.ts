@@ -7,6 +7,7 @@ import type {
   DocumentStatistics,
   DocumentType,
 } from '../types'
+import { resolveStandardFontDataUrl } from './pdfjs-standard-fonts'
 
 // Any operator that paints image data onto the page, in one form or another.
 const IMAGE_OPS = new Set<number>([
@@ -24,7 +25,10 @@ export async function analyzeDocument(
   filePath: string
 ): Promise<DocumentAnalysis> {
   const data = await readFile(filePath)
-  const pdf = await getDocument({ data: new Uint8Array(data) }).promise
+  const pdf = await getDocument({
+    data: new Uint8Array(data),
+    standardFontDataUrl: resolveStandardFontDataUrl(),
+  }).promise
 
   const statistics = await collectStatistics(pdf)
 

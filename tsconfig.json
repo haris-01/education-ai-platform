@@ -1,9 +1,9 @@
 {
   "files": [],
   "references": [
-    // {
-    //   "path": "./apps/api"
-    // },
+    {
+      "path": "./apps/api"
+    },
     {
       "path": "./apps/worker"
     },
@@ -14,7 +14,55 @@
       "path": "./packages/shared"
     },
     {
+      "path": "./packages/google-ai"
+    },
+    {
+      "path": "./packages/ai-telemetry"
+    },
+    {
       "path": "./packages/document-ai"
+    },
+    {
+      "path": "./packages/question-extraction"
+    },
+    {
+      "path": "./packages/mark-scheme-extraction"
+    },
+    {
+      "path": "./packages/syllabus-extraction"
+    },
+    {
+      "path": "./packages/examiner-report-extraction"
+    },
+    {
+      "path": "./packages/topic-mapping"
+    },
+    {
+      "path": "./packages/assessment-objective-mapping"
+    },
+    {
+      "path": "./packages/difficulty-estimation"
+    },
+    {
+      "path": "./packages/knowledge-builder"
+    },
+    {
+      "path": "./packages/embeddings"
+    },
+    {
+      "path": "./packages/vector-store"
+    },
+    {
+      "path": "./packages/exam-generation"
+    },
+    {
+      "path": "./packages/paper-store"
+    },
+    {
+      "path": "./packages/diagram-generation"
+    },
+    {
+      "path": "./packages/pdf-generation"
     }
     // {
     //   "path": "./packages/database"

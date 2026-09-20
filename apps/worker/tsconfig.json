@@ -4,12 +4,9 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "ignoreDeprecations":"6.0",
     "composite": true,
     "types": ["node"]
   },
 
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

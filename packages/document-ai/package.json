@@ -10,9 +10,15 @@
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
-    "typescript": "^7.0.2"
+    "@types/pngjs": "^6.0.5",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
-    "pdfjs-dist": "^6.1.200"
+    "pdfjs-dist": "^6.1.200",
+    "pngjs": "^7.0.0"
+  },
+  "scripts": {
+    "test": "vitest run"
   }
 }

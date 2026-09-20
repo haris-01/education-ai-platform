@@ -1,4 +1,4 @@
-import { createLogger } from '@education-ai/shared'
+import { createLogger, isCliEntrypoint } from '@education-ai/shared'
 import { existsSync } from 'node:fs'
 
 import { collectResources } from './collect-resources.js'
@@ -49,7 +49,7 @@ export { download } from './download.js'
 export { resolveStoredPath, store } from './store.js'
 export type * from './types.js'
 
-const isCli = import.meta.url === `file://${process.argv[1]}`
+const isCli = isCliEntrypoint(import.meta.url)
 
 if (isCli) {
   const subjectUrl = process.argv[2]

@@ -1,0 +1,27 @@
+{
+  "extends": "../../tsconfig.base.json",
+
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    "composite": true,
+    "types": ["node"]
+  },
+
+  "include": ["src"],
+
+  "references": [
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/difficulty-estimation" },
+    { "path": "../../packages/ai-telemetry" },
+    { "path": "../../packages/embeddings" },
+    { "path": "../../packages/vector-store" },
+    { "path": "../../packages/exam-generation" },
+    { "path": "../../packages/paper-store" },
+    { "path": "../../packages/pdf-generation" }
+  ]
+}

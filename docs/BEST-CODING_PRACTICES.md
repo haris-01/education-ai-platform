@@ -22,6 +22,62 @@ if (!parsed.success)
   return sendHttpResult(res, httpValidationErrorFromZod(parsed.error))
 ```
 
+### Avoid nested ternary operators
+
+Do not use nested ternary operators for branching or formatting logic. ESLint may allow a single ternary, but chaining or nesting ?: makes code harder to read and maintain. Prefer if / else if blocks, early returns, or a small named helper function when the logic represents a distinct decision.
+
+// Good
+
+function getMarker(entry: ClassifiedEntry): string {
+if (entry.role === 'questionNumber') {
+return `Q${entry.questionNumber}${getEmbeddedLabels(entry)}`
+}
+
+if (entry.role === 'subpart') {
+return `(${entry.partLabel})${getNestedLabel(entry)}`
+}
+
+if (entry.role === 'subSubpart') {
+return `(${entry.partLabel})`
+}
+
+return ''
+}
+
+// Bad
+
+const marker =
+entry.role === 'questionNumber'
+? `Q${entry.questionNumber}${embeddedLabels}`
+: entry.role === 'subpart'
+? `(${entry.partLabel})${entry.nestedPartLabel ? `(${entry.nestedPartLabel})` : ''}`
+      : entry.role === 'subSubpart'
+        ? `(${entry.partLabel})`
+: ''
+
+Prefer named helper functions
+
+When conditional formatting becomes more than a simple expression, extract it into a named function. The calling code should describe what is being calculated rather than containing all of the branching logic.
+
+// Good
+
+const marker = getMarker(entry)
+const marks = getMarks(entry)
+
+// Avoid
+
+const marker = conditionA
+? valueA
+: conditionB
+? valueB
+: conditionC
+? valueC
+: valueD
+
+Avoid deeply nested template literals
+
+Do not combine multiple conditional expressions inside template literals when the result can be built more clearly with a helper function or straightforward statements. Favor readable, explicit code over minimizing the number of lines.
+
 ### Prefer early `return`
 
 Handle errors and edge cases first, then keep the happy path unindented. Avoid `else` after `return` (`no-else-return` is enabled).

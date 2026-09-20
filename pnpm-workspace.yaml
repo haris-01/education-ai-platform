@@ -1,3 +1,10 @@
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
+  - 'tools/*'
+# Every dependency's install scripts are blocked unless listed here. This
+# is the control that matters most against npm supply-chain attacks, since
+# a lifecycle script is how they get their first execution — keep this list
+# as short as it is. See docs/security/.
+allowBuilds:
+  esbuild: true

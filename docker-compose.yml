@@ -1,0 +1,29 @@
+# Local development services. Nothing here is a deployment target — it
+# exists so the vector store can be a real Postgres rather than a mock.
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: education-ai-postgres
+    environment:
+      POSTGRES_USER: education_ai
+      POSTGRES_PASSWORD: education_ai
+      POSTGRES_DB: education_ai
+    ports:
+      # 5433, not 5432: this machine already runs other projects' Postgres
+      # containers, and taking the default port would mean this repo and
+      # those cannot be up at the same time.
+      #
+      # Bound to loopback on purpose. A bare `5433:5432` binds to every
+      # interface, publishing a weak-password database to the local
+      # network — see docs/security/.
+      - '127.0.0.1:5433:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U education_ai -d education_ai']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

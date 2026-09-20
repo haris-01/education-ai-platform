@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.base.json",
+
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    "composite": true,
+    "types": ["node"]
+  },
+
+  "include": ["src"],
+
+  "references": [
+    { "path": "../shared" },
+    { "path": "../google-ai" },
+    { "path": "../question-extraction" },
+    { "path": "../mark-scheme-extraction" },
+    { "path": "../syllabus-extraction" },
+    { "path": "../difficulty-estimation" },
+    { "path": "../knowledge-builder" }
+  ]
+}
